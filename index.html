@@ -7,17 +7,11 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
-      padding: 20px;
       text-align: center;
+      margin: 20px;
     }
     img {
-      max-width: 60%;
+      max-width: 80%;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       margin-bottom: 20px;
@@ -41,41 +35,42 @@
   <button class="button" onclick="nextPage()">Next</button>
 
   <script>
-    const imageSources = [
-      "page1.png",
-      "page2.png",
-      "page3.png",
-      "page4.png",
-      "page5.png",
-      "page6.png",
-      "page7.png"
-    ];
+    window.onload = function () {
+      var imageSources = [
+        "page1.png",
+        "page2.png",
+        "page3.png",
+        "page4.png",
+        "page5.png",
+        "page6.png",
+        "page7.png"
+      ];
 
-    let currentPage = 0;
+      var currentPage = 0;
 
-    function renderPage() {
-      const contentDiv = document.getElementById("content");
-      contentDiv.innerHTML = "";
+      function renderPage() {
+        var contentDiv = document.getElementById("content");
+        contentDiv.innerHTML = "";
 
-      const img = document.createElement("img");
-      img.src = imageSources[currentPage];
-      img.alt = `Slide ${currentPage + 1}`;
-      contentDiv.appendChild(img);
+        var img = document.createElement("img");
+        img.src = imageSources[currentPage];
+        img.alt = "Slide " + (currentPage + 1);
+        contentDiv.appendChild(img);
 
-      if (currentPage === imageSources.length - 1) {
-        document.querySelector("button").style.display = "none";
+        if (currentPage === imageSources.length - 1) {
+          document.querySelector("button").style.display = "none";
+        }
       }
-    }
 
-    function nextPage() {
-      if (currentPage < imageSources.length - 1) {
-        currentPage++;
-        renderPage();
-      }
-    }
+      window.nextPage = function () {
+        if (currentPage < imageSources.length - 1) {
+          currentPage++;
+          renderPage();
+        }
+      };
 
-    // Initial render
-    renderPage();
+      renderPage();
+    };
   </script>
 </body>
 </html>
