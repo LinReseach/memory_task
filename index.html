@@ -7,11 +7,17 @@
   <style>
     body {
       font-family: Arial, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      padding: 20px;
       text-align: center;
-      margin: 20px;
     }
     img {
-      max-width: 80%;
+      max-width: 60%;
       border-radius: 12px;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
       margin-bottom: 20px;
@@ -29,48 +35,57 @@
       background-color: #0056b3;
     }
   </style>
+  <script src="qimessaging.js"></script> <!-- Required for Pepper tablet integration -->
 </head>
 <body>
   <div id="content"></div>
   <button class="button" onclick="nextPage()">Next</button>
 
   <script>
-    window.onload = function () {
-      var imageSources = [
-        "page1.png",
-        "page2.png",
-        "page3.png",
-        "page4.png",
-        "page5.png",
-        "page6.png",
-        "page7.png"
-      ];
+    const imageSources = [
+      "page1.png",
+      "page2.png",
+      "page3.png",
+      "page4.png",
+      "page5.png",
+      "page6.png",
+      "page7.png"
+    ];
 
-      var currentPage = 0;
+    let currentPage = 0;
 
-      function renderPage() {
-        var contentDiv = document.getElementById("content");
-        contentDiv.innerHTML = "";
+    function renderPage() {
+      const contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = "";
 
-        var img = document.createElement("img");
-        img.src = imageSources[currentPage];
-        img.alt = "Slide " + (currentPage + 1);
-        contentDiv.appendChild(img);
+      const img = document.createElement("img");
+      img.src = imageSources[currentPage];
+      img.alt = `Slide ${currentPage + 1}`;
+      contentDiv.appendChild(img);
 
-        if (currentPage === imageSources.length - 1) {
-          document.querySelector("button").style.display = "none";
+      if (currentPage === imageSources.length - 1) {
+        document.querySelector("button").style.display = "none";
+      }
+    }
+
+    function nextPage() {
+      if (currentPage < imageSources.length - 1) {
+        currentPage++;
+        renderPage();
+
+        // Notify Pepper via ALMemory
+        if (typeof QiSession !== "undefined") {
+          new QiSession().then(function(session) {
+            session.service("ALMemory").then(function (memory) {
+              memory.raiseEvent("SlideTurned", currentPage);
+            });
+          });
         }
       }
+    }
 
-      window.nextPage = function () {
-        if (currentPage < imageSources.length - 1) {
-          currentPage++;
-          renderPage();
-        }
-      };
-
-      renderPage();
-    };
+    // Initial render
+    renderPage();
   </script>
 </body>
 </html>
