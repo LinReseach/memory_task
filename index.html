@@ -33,8 +33,33 @@
 <body>
   <div id="content"></div>
   <button class="button" onclick="nextPage()">Next</button>
-
   <script>
+    // Set up QiMessaging for Pepper
+    try {
+      // Attempt to connect to QiMessaging
+      var session = new QiSession();
+      session.connected.then(function(isConnected) {
+        console.log("Connected to Pepper's QiMessaging");
+      }).catch(function(error) {
+        console.error("Could not connect to QiMessaging:", error);
+      });
+    } catch (e) {
+      console.error("QiMessaging API not available:", e);
+    }
+
+    // Function to make Pepper speak
+    function sayText(text) {
+      try {
+        session.service("ALTextToSpeech").then(function(tts) {
+          tts.say(text);
+        }).catch(function(error) {
+          console.error("Error using text to speech service:", error);
+        });
+      } catch (e) {
+        console.error("Error making Pepper speak:", e);
+      }
+    }
+
     window.onload = function () {
       var imageSources = [
         "page1.png",
@@ -45,40 +70,44 @@
         "page6.png",
         "page7.png"
       ];
-
+      
+      // Corresponding text for Pepper to speak on each page
+      var speechTexts = [
+        "Welcome to the Colleague Memory Task. Press next to begin.",
+        "Let me tell you about my colleague Sarah from Marketing.",
+        "Sarah has been with the company for five years.",
+        "She is leading our new product launch next month.",
+        "Sarah enjoys hiking on the weekends.",
+        "You can reach Sarah at extension 2145.",
+        "Thank you for viewing this presentation!"
+      ];
+      
       var currentPage = 0;
-
+      
       function renderPage() {
         var contentDiv = document.getElementById("content");
         contentDiv.innerHTML = "";
-
         var img = document.createElement("img");
         img.src = imageSources[currentPage];
         img.alt = "Slide " + (currentPage + 1);
         contentDiv.appendChild(img);
-
+        
+        // Make Pepper say the text for the current page
+        sayText(speechTexts[currentPage]);
+        
         if (currentPage === imageSources.length - 1) {
           document.querySelector("button").style.display = "none";
         }
       }
-
-      function nextPage() {
+      
+      window.nextPage = function () {
         if (currentPage < imageSources.length - 1) {
           currentPage++;
           renderPage();
-          
-          // Notify Pepper about the current slide
-          if (typeof QiSession !== "undefined") {
-            new QiSession().then(function(session) {
-              session.service("ALMemory").then(function (memory) {
-                memory.raiseEvent("SlideTurned", currentPage);
-              });
-            });
-          }
         }
-      }
-
-
+      };
+      
+      // Initial page render and speech
       renderPage();
     };
   </script>
