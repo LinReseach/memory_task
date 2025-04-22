@@ -4,6 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Colleague Memory Task</title>
+  <script src="/libs/qimessaging/2/qimessaging.js"></script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -34,80 +35,104 @@
   <div id="content"></div>
   <button class="button" onclick="nextPage()">Next</button>
   <script>
-    // Set up QiMessaging for Pepper
-    try {
-      // Attempt to connect to QiMessaging
-      var session = new QiSession();
-      session.connected.then(function(isConnected) {
-        console.log("Connected to Pepper's QiMessaging");
-      }).catch(function(error) {
-        console.error("Could not connect to QiMessaging:", error);
-      });
-    } catch (e) {
-      console.error("QiMessaging API not available:", e);
-    }
-
-    // Function to make Pepper speak
-    function sayText(text) {
+    var imageSources = [
+      "page1.png",
+      "page2.png",
+      "page3.png",
+      "page4.png",
+      "page5.png",
+      "page6.png",
+      "page7.png"
+    ];
+    
+    // Corresponding text for Pepper to speak on each page
+    var speechTexts = [
+      "Welcome to the Colleague Memory Task. Press next to begin.",
+      "Let me tell you about my colleague Sarah from Marketing.",
+      "Sarah has been with the company for five years.",
+      "She is leading our new product launch next month.",
+      "Sarah enjoys hiking on the weekends.",
+      "You can reach Sarah at extension 2145.",
+      "Thank you for viewing this presentation!"
+    ];
+    
+    var currentPage = 0;
+    var ALTextToSpeech;
+    
+    // Connect to the robot
+    function connectToRobot() {
       try {
-        session.service("ALTextToSpeech").then(function(tts) {
-          tts.say(text);
-        }).catch(function(error) {
-          console.error("Error using text to speech service:", error);
+        // Create a session and connect to the robot
+        QiSession(function(session) {
+          console.log("Connected to QiMessaging: " + session);
+          
+          // Get the ALTextToSpeech service
+          session.service("ALTextToSpeech").then(function(tts) {
+            ALTextToSpeech = tts;
+            console.log("Got the ALTextToSpeech service");
+            
+            // Say the text for the initial page
+            sayText(speechTexts[currentPage]);
+          }, function(error) {
+            console.log("Error getting ALTextToSpeech service: " + error);
+          });
+          
+        }, function(error) {
+          console.log("Connection failed: " + error);
         });
-      } catch (e) {
-        console.error("Error making Pepper speak:", e);
+      } catch(e) {
+        console.log("Error in QiMessaging connection: " + e);
       }
     }
-
-    window.onload = function () {
-      var imageSources = [
-        "page1.png",
-        "page2.png",
-        "page3.png",
-        "page4.png",
-        "page5.png",
-        "page6.png",
-        "page7.png"
-      ];
-      
-      // Corresponding text for Pepper to speak on each page
-      var speechTexts = [
-        "Welcome to the Colleague Memory Task. Press next to begin.",
-        "Let me tell you about my colleague Sarah from Marketing.",
-        "Sarah has been with the company for five years.",
-        "She is leading our new product launch next month.",
-        "Sarah enjoys hiking on the weekends.",
-        "You can reach Sarah at extension 2145.",
-        "Thank you for viewing this presentation!"
-      ];
-      
-      var currentPage = 0;
-      
-      function renderPage() {
-        var contentDiv = document.getElementById("content");
-        contentDiv.innerHTML = "";
-        var img = document.createElement("img");
-        img.src = imageSources[currentPage];
-        img.alt = "Slide " + (currentPage + 1);
-        contentDiv.appendChild(img);
-        
-        // Make Pepper say the text for the current page
-        sayText(speechTexts[currentPage]);
-        
-        if (currentPage === imageSources.length - 1) {
-          document.querySelector("button").style.display = "none";
+    
+    // Make Pepper say something
+    function sayText(text) {
+      if (ALTextToSpeech) {
+        console.log("Pepper saying: " + text);
+        ALTextToSpeech.say(text).then(function() {
+          console.log("Speech completed successfully");
+        }, function(error) {
+          console.log("Error in speech: " + error);
+        });
+      } else {
+        console.log("ALTextToSpeech not available");
+        // Use the RobotUtilities API as an alternative
+        try {
+          RobotUtilities.onRobotEvent = function(event) {
+            console.log("Robot event: " + event);
+          };
+          RobotUtilities.sayText(text);
+        } catch (e) {
+          console.log("RobotUtilities not available: " + e);
         }
       }
+    }
+    
+    function renderPage() {
+      var contentDiv = document.getElementById("content");
+      contentDiv.innerHTML = "";
+      var img = document.createElement("img");
+      img.src = imageSources[currentPage];
+      img.alt = "Slide " + (currentPage + 1);
+      contentDiv.appendChild(img);
       
-      window.nextPage = function () {
-        if (currentPage < imageSources.length - 1) {
-          currentPage++;
-          renderPage();
-        }
-      };
+      // Make Pepper say the text for the current page
+      sayText(speechTexts[currentPage]);
       
-      // Initial page render and speech
+      if (currentPage === imageSources.length - 1) {
+        document.querySelector("button").style.display = "none";
+      }
+    }
+    
+    window.nextPage = function() {
+      if (currentPage < imageSources.length - 1) {
+        currentPage++;
+        renderPage();
+      }
+    };
+    
+    window.onload = function() {
+      connectToRobot();
       renderPage();
     };
   </script>
